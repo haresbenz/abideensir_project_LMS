@@ -1,29 +1,45 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-const isStudentRoute = createRouteMatcher(["/user/(.*)"]);
-const isTeacherRoute = createRouteMatcher(["/teacher/(.*)"]);
+const isStudentRoute = (path: string): boolean => /^\/user\/(.*)/.test(path);
+const isTeacherRoute = (path: string): boolean => /^\/teacher\/(.*)/.test(path);
 
-export default clerkMiddleware(async (auth, req) => {
-  const { sessionClaims } = await auth();
-  const userRole =
-    (sessionClaims?.metadata as { userType: "student" | "teacher" })
-      ?.userType || "student";
+export function middleware(req: NextRequest) {
+  const token = req.cookies.get("token")?.value;
 
-  if (isStudentRoute(req)) {
-    if (userRole !== "student") {
-      const url = new URL("/teacher/courses", req.url);
-      return NextResponse.redirect(url);
-    }
+  if (!token) {
+    // Redirect to login if no token is found
+    const loginUrl = new URL("/login", req.url);
+    return NextResponse.redirect(loginUrl);
   }
 
-  if (isTeacherRoute(req)) {
-    if (userRole !== "teacher") {
-      const url = new URL("/user/courses", req.url);
-      return NextResponse.redirect(url);
+  try {
+    // Decode the JWT token
+    const payload = JSON.parse(atob(token.split(".")[1])); // Decode JWT payload
+    const userRole: "student" | "teacher" = payload?.userType || "student";
+
+    const pathname = req.nextUrl.pathname;
+
+    if (isStudentRoute(pathname)) {
+      if (userRole !== "student") {
+        const teacherUrl = new URL("/teacher/courses", req.url);
+        return NextResponse.redirect(teacherUrl);
+      }
     }
+
+    if (isTeacherRoute(pathname)) {
+      if (userRole !== "teacher") {
+        const studentUrl = new URL("/user/courses", req.url);
+        return NextResponse.redirect(studentUrl);
+      }
+    }
+  } catch (error) {
+    console.error("Failed to decode token:", error);
+    const loginUrl = new URL("/login", req.url);
+    return NextResponse.redirect(loginUrl);
   }
-});
+
+  return NextResponse.next(); // Allow the request if authenticated
+}
 
 export const config = {
   matcher: [

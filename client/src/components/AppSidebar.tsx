@@ -1,5 +1,5 @@
-import { useClerk, useUser } from "@clerk/nextjs";
-import { usePathname } from "next/navigation";
+"use client";
+
 import React from "react";
 import {
   Sidebar,
@@ -24,10 +24,11 @@ import Loading from "./Loading";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
+import useAuth from "@/hooks/useAuth"; // Replacing Clerk's useUser with custom useAuth
 
 const AppSidebar = () => {
-  const { user, isLoaded } = useUser();
-  const { signOut } = useClerk();
+  const { user, isLoaded } = useAuth(); // Replacing Clerk's useUser
   const pathname = usePathname();
   const { toggleSidebar } = useSidebar();
 
@@ -49,8 +50,7 @@ const AppSidebar = () => {
   if (!isLoaded) return <Loading />;
   if (!user) return <div>User not found</div>;
 
-  const userType =
-    (user.publicMetadata.userType as "student" | "teacher") || "student";
+  const userType = (user.userType as "student" | "teacher") || "student"; // Assuming userType is part of decoded JWT
   const currentNavLinks = navLinks[userType];
 
   return (
@@ -133,7 +133,10 @@ const AppSidebar = () => {
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <button
-                onClick={() => signOut()}
+                onClick={() => {
+                  localStorage.removeItem("token"); // Clear the token for sign-out
+                  window.location.reload(); // Reload to simulate a "sign-out"
+                }}
                 className="app-sidebar__signout"
               >
                 <LogOut className="mr-2 h-6 w-6" />

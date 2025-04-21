@@ -12,7 +12,6 @@ import Loading from "@/components/Loading";
 if (!process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY) {
   throw new Error("NEXT_PUBLIC_STRIPE_PUBLIC_KEY is not set");
 }
-
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY);
 
 const appearance: Appearance = {

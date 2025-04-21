@@ -18,15 +18,19 @@ import {
 } from "@/components/ui/table";
 import { formatPrice } from "@/lib/utils";
 import { useGetTransactionsQuery } from "@/state/api";
-import { useUser } from "@clerk/nextjs";
 import React, { useState } from "react";
+import useAuth from "@/hooks/useAuth"; // Use the custom authentication hook
 
 const TeacherBilling = () => {
   const [paymentType, setPaymentType] = useState("all");
-  const { user, isLoaded } = useUser();
-  const { data: transactions, isLoading: isLoadingTransactions } =
-    useGetTransactionsQuery(user?.id || "", {
-      skip: !isLoaded || !user,
+  const { user, isLoaded } = useAuth(); // Use the updated custom auth hook
+
+  // Use null-safe value for user ID
+  const userId = user?.id || null;
+
+  const { data: transactions, isLoading: isLoadingTransactions, error } =
+    useGetTransactionsQuery(userId || "", {
+      skip: !isLoaded || !userId,
     });
 
   const filteredData =
@@ -37,7 +41,8 @@ const TeacherBilling = () => {
     }) || [];
 
   if (!isLoaded) return <Loading />;
-  if (!user) return <div>Please sign in to view your billing information.</div>;
+  if (!userId) return <div>Please sign in to view your billing information.</div>;
+  if (error) return <div>Error loading transactions. Please try again later.</div>;
 
   return (
     <div className="billing">

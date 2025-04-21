@@ -53,7 +53,7 @@ declare global {
   }
 
   interface Transaction {
-    userId: string;
+    userId: string | null | undefined;
     transactionId: string;
     dateTime: string;
     courseId: string;

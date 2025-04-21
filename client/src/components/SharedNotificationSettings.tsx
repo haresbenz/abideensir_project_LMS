@@ -1,104 +1,53 @@
-"use client";
-
-import {
-  NotificationSettingsFormData,
-  notificationSettingsSchema,
-} from "@/lib/schemas";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useUpdateUserMutation } from "@/state/api";
-import { useUser } from "@clerk/nextjs";
 import React from "react";
-import { useForm } from "react-hook-form";
-import Header from "./Header";
-import { Form } from "@/components/ui/form";
-import { CustomFormField } from "./CustomFormField";
-import { Button } from "@/components/ui/button";
 
-const SharedNotificationSettings = ({
-  title = "Notification Settings",
-  subtitle = "Manage your notification settings",
-}: SharedNotificationSettingsProps) => {
-  const { user } = useUser();
-  const [updateUser] = useUpdateUserMutation();
+interface SharedNotificationSettingsProps {
+  title: string;
+  subtitle: string;
+}
 
-  const currentSettings =
-    (user?.publicMetadata as { settings?: UserSettings })?.settings || {};
+// Placeholder for form schema data
+interface SharedNotificationSettingsForm {
+  notificationEmail: string;
+}
 
-  const methods = useForm<NotificationSettingsFormData>({
-    resolver: zodResolver(notificationSettingsSchema),
-    defaultValues: {
-      courseNotifications: currentSettings.courseNotifications || false,
-      emailAlerts: currentSettings.emailAlerts || false,
-      smsAlerts: currentSettings.smsAlerts || false,
-      notificationFrequency: currentSettings.notificationFrequency || "daily",
-    },
-  });
-
-  const onSubmit = async (data: NotificationSettingsFormData) => {
-    if (!user) return;
-
-    const updatedUser = {
-      userId: user.id,
-      publicMetadata: {
-        ...user.publicMetadata,
-        settings: {
-          ...currentSettings,
-          ...data,
-        },
+const SharedNotificationSettings: React.FC<SharedNotificationSettingsProps> = ({
+  title,
+  subtitle,
+}) => {
+  // Simulate the `useForm` functionality with placeholders
+  const form = {
+    register: (fieldName: keyof SharedNotificationSettingsForm) => ({
+      name: fieldName,
+      onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
+        console.log(`${fieldName} changed to:`, event.target.value);
       },
-    };
-
-    try {
-      await updateUser(updatedUser);
-    } catch (error) {
-      console.error("Failed to update user settings: ", error);
-    }
+    }),
+    handleSubmit: (callback: (data: SharedNotificationSettingsForm) => void) => (
+      event: React.FormEvent
+    ) => {
+      event.preventDefault();
+      // Simulate form submission with mock data
+      const mockData: SharedNotificationSettingsForm = { notificationEmail: "mock@example.com" };
+      callback(mockData);
+    },
   };
 
-  if (!user) return <div>Please sign in to manage your settings.</div>;
+  const onSubmit = async (data: SharedNotificationSettingsForm) => {
+    console.log("Form submitted:", data);
+  };
 
   return (
-    <div className="notification-settings">
-      <Header title={title} subtitle={subtitle} />
-      <Form {...methods}>
-        <form
-          onSubmit={methods.handleSubmit(onSubmit)}
-          className="notification-settings__form"
-        >
-          <div className="notification-settings__fields">
-            <CustomFormField
-              name="courseNotifications"
-              label="Course Notifications"
-              type="switch"
-            />
-            <CustomFormField
-              name="emailAlerts"
-              label="Email Alerts"
-              type="switch"
-            />
-            <CustomFormField
-              name="smsAlerts"
-              label="SMS Alerts"
-              type="switch"
-            />
-
-            <CustomFormField
-              name="notificationFrequency"
-              label="Notification Frequency"
-              type="select"
-              options={[
-                { value: "immediate", label: "Immediate" },
-                { value: "daily", label: "Daily" },
-                { value: "weekly", label: "Weekly" },
-              ]}
-            />
-          </div>
-
-          <Button type="submit" className="notification-settings__submit">
-            Update Settings
-          </Button>
-        </form>
-      </Form>
+    <div>
+      <h1>{title}</h1>
+      <h2>{subtitle}</h2>
+      <form onSubmit={form.handleSubmit(onSubmit)}>
+        <input
+          type="text"
+          {...form.register("notificationEmail")}
+          placeholder="Email"
+        />
+        <button type="submit">Save</button>
+      </form>
     </div>
   );
 };

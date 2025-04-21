@@ -1,13 +1,14 @@
 "use client";
+
 import AppSidebar from "@/components/AppSidebar";
 import Loading from "@/components/Loading";
 import Navbar from "@/components/Navbar";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
-import { useUser } from "@clerk/nextjs";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import ChaptersSidebar from "./user/courses/[courseId]/ChaptersSidebar";
+import useAuth from "@/hooks/useAuth"; // Custom authentication hook
 
 export default function DashboardLayout({
   children,
@@ -16,7 +17,7 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const [courseId, setCourseId] = useState<string | null>(null);
-  const { user, isLoaded } = useUser();
+  const { user, isLoaded } = useAuth(); // Replace Clerk's useUser with custom useAuth
   const isCoursePage = /^\/user\/courses\/[^\/]+(?:\/chapters\/[^\/]+)?$/.test(
     pathname
   );

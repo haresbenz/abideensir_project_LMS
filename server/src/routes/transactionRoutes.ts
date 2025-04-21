@@ -1,4 +1,4 @@
-import express from "express";
+/*import express from "express";
 import {
   createStripePaymentIntent,
   createTransaction,
@@ -7,8 +7,9 @@ import {
 
 const router = express.Router();
 
-router.get("/", listTransactions);
-router.post("/", createTransaction);
-router.post("/stripe/payment-intent", createStripePaymentIntent);
+//router.get("/", listTransactions);
+//router.post("/", createTransaction);
+//router.post("/stripe/payment-intent", createStripePaymentIntent);
 
 export default router;
+*/

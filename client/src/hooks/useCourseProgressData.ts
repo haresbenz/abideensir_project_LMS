@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import {
@@ -5,11 +7,11 @@ import {
   useGetUserCourseProgressQuery,
   useUpdateUserCourseProgressMutation,
 } from "@/state/api";
-import { useUser } from "@clerk/nextjs";
+import useAuth from "@/hooks/useAuth"; // Custom authentication hook
 
 export const useCourseProgressData = () => {
   const { courseId, chapterId } = useParams();
-  const { user, isLoaded } = useUser();
+  const { user, isLoaded } = useAuth(); // Replace Clerk's useUser with custom useAuth
   const [hasMarkedComplete, setHasMarkedComplete] = useState(false);
   const [updateProgress] = useUpdateUserCourseProgressMutation();
 

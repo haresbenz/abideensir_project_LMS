@@ -1,5 +1,5 @@
-import { Request, Response } from "express";
-import { clerkClient } from "../index";
+/*import { Request, Response } from "express";
+//import { clerkClient } from "../index";
 
 export const updateUser = async (
   req: Request,
@@ -8,6 +8,7 @@ export const updateUser = async (
   const { userId } = req.params;
   const userData = req.body;
   try {
+    /*
     const user = await clerkClient.users.updateUserMetadata(userId, {
       publicMetadata: {
         userType: userData.publicMetadata.userType,
@@ -20,3 +21,4 @@ export const updateUser = async (
     res.status(500).json({ message: "Error updating user", error });
   }
 };
+*/

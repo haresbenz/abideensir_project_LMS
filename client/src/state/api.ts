@@ -1,7 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import { BaseQueryApi, FetchArgs } from "@reduxjs/toolkit/query";
-import { User } from "@clerk/nextjs/server";
-import { Clerk } from "@clerk/clerk-js";
 import { toast } from "sonner";
 
 const customBaseQuery = async (
@@ -11,10 +9,10 @@ const customBaseQuery = async (
 ) => {
   const baseQuery = fetchBaseQuery({
     baseUrl: process.env.NEXT_PUBLIC_API_BASE_URL,
-    prepareHeaders: async (headers) => {
-      const token = await window.Clerk?.session?.getToken();
+    prepareHeaders: (headers) => {
+      const token = localStorage.getItem("token"); // Retrieve JWT token from localStorage
       if (token) {
-        headers.set("Authorization", `Bearer ${token}`);
+        headers.set("Authorization", `Bearer ${token}`); // Add Authorization header
       }
       return headers;
     },
@@ -63,20 +61,6 @@ export const api = createApi({
   reducerPath: "api",
   tagTypes: ["Courses", "Users", "UserCourseProgress"],
   endpoints: (build) => ({
-    /* 
-    ===============
-    USER CLERK
-    =============== 
-    */
-    updateUser: build.mutation<User, Partial<User> & { userId: string }>({
-      query: ({ userId, ...updatedUser }) => ({
-        url: `users/clerk/${userId}`,
-        method: "PUT",
-        body: updatedUser,
-      }),
-      invalidatesTags: ["Users"],
-    }),
-
     /* 
     ===============
     COURSES
@@ -184,7 +168,7 @@ export const api = createApi({
 
     getUserCourseProgress: build.query<
       UserCourseProgress,
-      { userId: string; courseId: string }
+      { userId: string |null |undefined; courseId: string }
     >({
       query: ({ userId, courseId }) =>
         `users/course-progress/${userId}/courses/${courseId}`,
@@ -194,7 +178,7 @@ export const api = createApi({
     updateUserCourseProgress: build.mutation<
       UserCourseProgress,
       {
-        userId: string;
+        userId: null | undefined | string;
         courseId: string;
         progressData: {
           sections: SectionProgress[];
@@ -234,7 +218,6 @@ export const api = createApi({
 });
 
 export const {
-  useUpdateUserMutation,
   useCreateCourseMutation,
   useUpdateCourseMutation,
   useDeleteCourseMutation,

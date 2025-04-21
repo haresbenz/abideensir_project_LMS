@@ -1,5 +1,11 @@
 import * as z from "zod";
 
+export const sharedNotificationSettingsSchema = z.object({
+  notificationEmail: z.string().email(),
+});
+
+export type SharedNotificationSettingsForm = z.infer<typeof sharedNotificationSettingsSchema>;
+
 // Course Editor Schemas
 export const courseSchema = z.object({
   courseTitle: z.string().min(1, "Title is required"),

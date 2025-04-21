@@ -18,12 +18,12 @@ import {
 } from "@/components/ui/table";
 import { formatPrice } from "@/lib/utils";
 import { useGetTransactionsQuery } from "@/state/api";
-import { useUser } from "@clerk/nextjs";
+import useAuth from "@/hooks/useAuth"; // Custom auth hook
 import React, { useState } from "react";
 
 const UserBilling = () => {
   const [paymentType, setPaymentType] = useState("all");
-  const { user, isLoaded } = useUser();
+  const { user, isLoaded } = useAuth(); // Replace Clerk's useUser with custom useAuth
   const { data: transactions, isLoading: isLoadingTransactions } =
     useGetTransactionsQuery(user?.id || "", {
       skip: !isLoaded || !user,

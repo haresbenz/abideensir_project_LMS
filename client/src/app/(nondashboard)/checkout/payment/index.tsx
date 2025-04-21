@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import StripeProvider from "./StripeProvider";
 import {
@@ -7,7 +9,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { useCheckoutNavigation } from "@/hooks/useCheckoutNavigation";
 import { useCurrentCourse } from "@/hooks/useCurrentCourse";
-import { useClerk, useUser } from "@clerk/nextjs";
+import useAuth from "@/hooks/useAuth"; // Custom authentication hook
 import CoursePreview from "@/components/CoursePreview";
 import { CreditCard } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,8 +22,7 @@ const PaymentPageContent = () => {
   const [createTransaction] = useCreateTransactionMutation();
   const { navigateToStep } = useCheckoutNavigation();
   const { course, courseId } = useCurrentCourse();
-  const { user } = useUser();
-  const { signOut } = useClerk();
+  const { user } = useAuth(); // Replace Clerk's useUser with custom useAuth
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,11 +59,6 @@ const PaymentPageContent = () => {
     }
   };
 
-  const handleSignOutAndNavigate = async () => {
-    await signOut();
-    navigateToStep(1);
-  };
-
   if (!course) return null;
 
   return (
@@ -73,7 +69,7 @@ const PaymentPageContent = () => {
           <CoursePreview course={course} />
         </div>
 
-        {/* Pyament Form */}
+        {/* Payment Form */}
         <div className="payment__form-container">
           <form
             id="payment-form"
@@ -106,15 +102,6 @@ const PaymentPageContent = () => {
 
       {/* Navigation Buttons */}
       <div className="payment__actions">
-        <Button
-          className="hover:bg-white-50/10"
-          onClick={handleSignOutAndNavigate}
-          variant="outline"
-          type="button"
-        >
-          Switch Account
-        </Button>
-
         <Button
           form="payment-form"
           type="submit"

@@ -1,13 +1,15 @@
 "use client";
 
-import { SignUp, useUser } from "@clerk/nextjs";
-import React from "react";
-import { dark } from "@clerk/themes";
-import { useSearchParams } from "next/navigation";
+import React, { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 const SignUpComponent = () => {
-  const { user } = useUser();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [userType, setUserType] = useState("student");
+  const router = useRouter();
   const searchParams = useSearchParams();
+
   const isCheckoutPage = searchParams.get("showSignUp") !== null;
   const courseId = searchParams.get("id");
 
@@ -15,45 +17,68 @@ const SignUpComponent = () => {
     ? `/checkout?step=1&id=${courseId}&showSignUp=false`
     : "/signin";
 
-  const getRedirectUrl = () => {
-    if (isCheckoutPage) {
-      return `/checkout?step=2&id=${courseId}&showSignUp=false`;
-    }
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-    const userType = user?.publicMetadata?.userType as string;
-    if (userType === "teacher") {
-      return "/teacher/courses";
+    // Simulate sign-up process
+    const fakeToken = btoa(
+      JSON.stringify({
+        id: "123",
+        email,
+        userType,
+      })
+    );
+    localStorage.setItem("token", fakeToken);
+
+    // Redirect based on the user type or checkout page
+    if (isCheckoutPage) {
+      router.push(`/checkout?step=2&id=${courseId}&showSignUp=false`);
+    } else {
+      if (userType === "teacher") {
+        router.push("/teacher/courses");
+      } else {
+        router.push("/user/courses");
+      }
     }
-    return "/user/courses";
   };
 
   return (
-    <SignUp
-      appearance={{
-        baseTheme: dark,
-        elements: {
-          rootBox: "flex justify-center items-center py-5",
-          cardBox: "shadow-none",
-          card: "bg-customgreys-secondarybg w-full shadow-none",
-          footer: {
-            background: "#25262F",
-            padding: "0rem 2.5rem",
-            "& > div > div:nth-child(1)": {
-              background: "#25262F",
-            },
-          },
-          formFieldLabel: "text-white-50 font-normal",
-          formButtonPrimary:
-            "bg-primary-700 text-white-100 hover:bg-primary-600 !shadow-none",
-          formFieldInput: "bg-customgreys-primarybg text-white-50 !shadow-none",
-          footerActionLink: "text-primary-750 hover:text-primary-600",
-        },
-      }}
-      signInUrl={signInUrl}
-      forceRedirectUrl={getRedirectUrl()}
-      routing="hash"
-      afterSignOutUrl="/"
-    />
+    <div className="sign-up">
+      <form onSubmit={handleSignUp} className="sign-up__form">
+        <h1 className="sign-up__title">Sign Up</h1>
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="sign-up__input"
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="sign-up__input"
+        />
+        <select
+          value={userType}
+          onChange={(e) => setUserType(e.target.value)}
+          className="sign-up__select"
+        >
+          <option value="student">Student</option>
+          <option value="teacher">Teacher</option>
+        </select>
+        <button type="submit" className="sign-up__button">
+          Sign Up
+        </button>
+        <p className="sign-up__footer">
+          Already have an account?{" "}
+          <a href={signInUrl} className="sign-up__link">
+            Sign In
+          </a>
+        </p>
+      </form>
+    </div>
   );
 };
 

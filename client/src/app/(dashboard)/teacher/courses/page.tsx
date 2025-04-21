@@ -10,13 +10,21 @@ import {
   useDeleteCourseMutation,
   useGetCoursesQuery,
 } from "@/state/api";
-import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import React, { useMemo, useState } from "react";
+import useAuth from "@/hooks/useAuth"; // Use the updated custom authentication hook
+
+// Define the structure for a Course
+interface Course {
+  courseId: string;
+  title: string;
+  category: string;
+  teacherId: string;
+}
 
 const Courses = () => {
   const router = useRouter();
-  const { user } = useUser();
+  const { user, isLoaded } = useAuth(); // Use the updated custom useAuth hook
   const {
     data: courses,
     isLoading,
@@ -32,7 +40,7 @@ const Courses = () => {
   const filteredCourses = useMemo(() => {
     if (!courses) return [];
 
-    return courses.filter((course) => {
+    return courses.filter((course: Course) => {
       const matchesSearch = course.title
         .toLowerCase()
         .includes(searchTerm.toLowerCase());
@@ -55,10 +63,13 @@ const Courses = () => {
   };
 
   const handleCreateCourse = async () => {
-    if (!user) return;
+    if (!user || !user.id) {
+      alert("You must be signed in as a teacher to create a course.");
+      return;
+    }
 
     const result = await createCourse({
-      teacherId: user.id,
+      teacherId: user.id, // Ensured to be a string at this point
       teacherName: user.fullName || "Unknown Teacher",
     }).unwrap();
     router.push(`/teacher/courses/${result.courseId}`, {
@@ -66,6 +77,8 @@ const Courses = () => {
     });
   };
 
+  if (!isLoaded) return <Loading />;
+  if (!user) return <div>Please sign in to view your courses.</div>;
   if (isLoading) return <Loading />;
   if (isError || !courses) return <div>Error loading courses.</div>;
 
@@ -94,7 +107,7 @@ const Courses = () => {
             course={course}
             onEdit={handleEdit}
             onDelete={handleDelete}
-            isOwner={course.teacherId === user?.id}
+            isOwner={course.teacherId === user.id}
           />
         ))}
       </div>

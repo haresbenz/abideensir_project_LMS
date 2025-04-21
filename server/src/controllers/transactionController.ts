@@ -1,4 +1,4 @@
-import Stripe from "stripe";
+/*//import Stripe from "stripe";
 import dotenv from "dotenv";
 import { Request, Response } from "express";
 import Course from "../models/courseModel";
@@ -13,7 +13,7 @@ if (!process.env.STRIPE_SECRET_KEY) {
   );
 }
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+//const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 export const listTransactions = async (
   req: Request,
@@ -73,7 +73,6 @@ export const createTransaction = async (
   res: Response
 ): Promise<void> => {
   const { userId, courseId, transactionId, amount, paymentProvider } = req.body;
-
   try {
     // 1. get course info
     const course = await Course.get(courseId);
@@ -129,3 +128,4 @@ export const createTransaction = async (
       .json({ message: "Error creating transaction and enrollment", error });
   }
 };
+*/

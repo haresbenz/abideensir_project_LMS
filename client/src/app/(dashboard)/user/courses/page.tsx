@@ -1,17 +1,37 @@
 "use client";
 
+import { useState, useMemo, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useGetUserEnrolledCoursesQuery } from "@/state/api";
 import Toolbar from "@/components/Toolbar";
 import CourseCard from "@/components/CourseCard";
-import { useGetUserEnrolledCoursesQuery } from "@/state/api";
-import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
-import { useUser } from "@clerk/nextjs";
-import { useState, useMemo } from "react";
 import Loading from "@/components/Loading";
+
+interface User {
+  id: string;
+  [key: string]: any;
+}
+
+const useAuth = (): { user: User | null; isLoaded: boolean } => {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      const decodedUser = JSON.parse(atob(token.split(".")[1])); // Decode JWT payload
+      setUser(decodedUser);
+    }
+    setIsLoaded(true);
+  }, []);
+
+  return { user, isLoaded };
+};
 
 const Courses = () => {
   const router = useRouter();
-  const { user, isLoaded } = useUser();
+  const { user, isLoaded } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
 
@@ -45,14 +65,10 @@ const Courses = () => {
       const firstChapter = course.sections[0].chapters[0];
       router.push(
         `/user/courses/${course.courseId}/chapters/${firstChapter.chapterId}`,
-        {
-          scroll: false,
-        }
+        { scroll: false }
       );
     } else {
-      router.push(`/user/courses/${course.courseId}`, {
-        scroll: false,
-      });
+      router.push(`/user/courses/${course.courseId}`, { scroll: false });
     }
   };
 

@@ -1,14 +1,17 @@
 "use client";
 
-import { SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs";
-import { dark } from "@clerk/themes";
 import { Bell, BookOpen } from "lucide-react";
 import Link from "next/link";
 import React from "react";
+import useAuth from "@/hooks/useAuth"; // Custom authentication hook
 
 const NonDashboardNavbar = () => {
-  const { user } = useUser();
-  const userRole = user?.publicMetadata?.userType as "student" | "teacher";
+  const { user, isLoaded } = useAuth(); // Replace Clerk's useUser with custom useAuth
+  const userRole = user?.userType as "student" | "teacher";
+
+  if (!isLoaded) {
+    return null; // Prevent rendering until user data is loaded
+  }
 
   return (
     <nav className="nondashboard-navbar">
@@ -40,38 +43,36 @@ const NonDashboardNavbar = () => {
             <Bell className="nondashboard-navbar__notification-icon" />
           </button>
 
-          <SignedIn>
-            <UserButton
-              appearance={{
-                baseTheme: dark,
-                elements: {
-                  userButtonOuterIdentifier: "text-customgreys-dirtyGrey",
-                  userButtonBox: "scale-90 sm:scale-100",
-                },
-              }}
-              showName={true}
-              userProfileMode="navigation"
-              userProfileUrl={
-                userRole === "teacher" ? "/teacher/profile" : "/user/profile"
-              }
-            />
-          </SignedIn>
-          <SignedOut>
-            <Link
-              href="/signin"
-              className="nondashboard-navbar__auth-button--login"
-              scroll={false}
-            >
-              Log in
-            </Link>
-            <Link
-              href="/signup"
-              className="nondashboard-navbar__auth-button--signup"
-              scroll={false}
-            >
-              Sign up
-            </Link>
-          </SignedOut>
+          {user ? (
+            <div className="nondashboard-navbar__user">
+              <Link
+                href={
+                  userRole === "teacher" ? "/teacher/profile" : "/user/profile"
+                }
+                className="nondashboard-navbar__user-link"
+                scroll={false}
+              >
+                {user.fullName || "User"}
+              </Link>
+            </div>
+          ) : (
+            <div className="nondashboard-navbar__auth">
+              <Link
+                href="/signin"
+                className="nondashboard-navbar__auth-button--login"
+                scroll={false}
+              >
+                Log in
+              </Link>
+              <Link
+                href="/signup"
+                className="nondashboard-navbar__auth-button--signup"
+                scroll={false}
+              >
+                Sign up
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </nav>
