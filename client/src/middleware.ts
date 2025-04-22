@@ -1,51 +1,67 @@
 import { NextRequest, NextResponse } from "next/server";
+import jwt, { JwtPayload } from "jsonwebtoken";
 
-const isStudentRoute = (path: string): boolean => /^\/user\/(.*)/.test(path);
-const isTeacherRoute = (path: string): boolean => /^\/teacher\/(.*)/.test(path);
+const JWT_SECRET = process.env.JWT_SECRET!; // Replace with your actual JWT secret
+
+interface TokenPayload extends JwtPayload {
+  role: string;
+}
 
 export function middleware(req: NextRequest) {
-  const token = req.cookies.get("token")?.value;
+  const token = req.cookies.get("token")?.value; // Get the token from cookies
+  const pathname = req.nextUrl.pathname;
+
+  // Allow access to the login page without authentication
+  if (pathname === "/login") {
+    return NextResponse.next();
+  }
 
   if (!token) {
-    // Redirect to login if no token is found
-    const loginUrl = new URL("/login", req.url);
-    return NextResponse.redirect(loginUrl);
+    console.error("Token is missing");
+    return NextResponse.redirect(new URL("/login", req.url));
   }
 
   try {
-    // Decode the JWT token
-    const payload = JSON.parse(atob(token.split(".")[1])); // Decode JWT payload
-    const userRole: "student" | "teacher" = payload?.userType || "student";
+    // Verify the token
+    const decodedToken = jwt.verify(token, JWT_SECRET);
 
-    const pathname = req.nextUrl.pathname;
+    // Validate the token payload structure
+    if (
+      typeof decodedToken === "object" &&
+      decodedToken !== null &&
+      "role" in decodedToken &&
+      typeof (decodedToken as TokenPayload).role === "string"
+    ) {
+      const payload = decodedToken as TokenPayload;
 
-    if (isStudentRoute(pathname)) {
-      if (userRole !== "student") {
-        const teacherUrl = new URL("/teacher/courses", req.url);
-        return NextResponse.redirect(teacherUrl);
+      // Redirect based on user role
+      if (pathname.startsWith("/user") && payload.role !== "student") {
+        return NextResponse.redirect(new URL("/teacher/courses", req.url));
       }
+
+      if (pathname.startsWith("/teacher") && payload.role !== "teacher") {
+        return NextResponse.redirect(new URL("/user/courses", req.url));
+      }
+    } else {
+      throw new Error("Invalid token payload");
+    }
+  } catch (err) {
+    // Use a type guard to safely handle errors
+    if (err instanceof Error) {
+      console.error("Error verifying token:", err.message);
+    } else {
+      console.error("An unknown error occurred during token verification");
     }
 
-    if (isTeacherRoute(pathname)) {
-      if (userRole !== "teacher") {
-        const studentUrl = new URL("/user/courses", req.url);
-        return NextResponse.redirect(studentUrl);
-      }
-    }
-  } catch (error) {
-    console.error("Failed to decode token:", error);
-    const loginUrl = new URL("/login", req.url);
-    return NextResponse.redirect(loginUrl);
+    // Redirect to login if token is invalid or missing
+    return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  return NextResponse.next(); // Allow the request if authenticated
+  return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
-    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    // Always run for API routes
-    "/(api|trpc)(.*)",
+    "/((?!_next/static|favicon.ico).*)",
   ],
 };

@@ -1,3 +1,5 @@
+"use client";
+
 import SharedNotificationSettings from "@/components/SharedNotificationSettings";
 import React from "react";
 
